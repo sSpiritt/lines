@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Lines Game</string>
+    <string name="app_version">ver: Alpha 1.0</string>
+
+    <string name="title_activity_game">GameActivity</string>
+    <string name="dummy_button">Dummy Button</string>
+    <string name="dummy_content">DUMMY\nCONTENT</string>
+</resources>
