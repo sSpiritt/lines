@@ -13,6 +13,7 @@ public final class GameConfig {
     private static String nick;
     private static int linesSize;
     private static int gameSpeed;
+    private static boolean linesAsSquares;
 
     private static int backgroundColor;
     private static int wallColor;
@@ -31,6 +32,7 @@ public final class GameConfig {
         gameSpeed = sett.getInt("gameSpeedKey", 5);
         backgroundColor = sett.getInt("backgroundColorKey", Color.BLACK);
         wallColor = sett.getInt("wallColorKey", Color.RED);
+        linesAsSquares = sett.getBoolean("linesAsSquaresKey", true);
     }
 
     public void saveData(Context context){
@@ -40,6 +42,7 @@ public final class GameConfig {
         sett.putInt("gameSpeedKey", gameSpeed);
         sett.putInt("backgroundColorKey", backgroundColor);
         sett.putInt("wallColorKey", wallColor);
+        sett.putBoolean("linesAsSquaresKey", linesAsSquares);
         sett.commit();
     }
 
@@ -84,4 +87,8 @@ public final class GameConfig {
     }
 
     public static Sprite getSprite() { return sprite; }
+
+    public boolean getLinesAsSquares() {return  linesAsSquares;};
+
+    public void setLinesAsSquares(boolean squares) {this.linesAsSquares = squares;};
 }

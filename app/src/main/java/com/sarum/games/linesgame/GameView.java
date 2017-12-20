@@ -8,10 +8,13 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import com.sarum.games.linesgame.ApplicationPreferenceService;
 
+import java.util.List;
+
 /**
  * Created by Gabrys on 09.12.2017.
  */
 public final class GameView {
+    private GameSurfaceView gameSurfaceView;
     private GameConfig gameConfig;
     private Bitmap bmpGame;
     private Canvas canvasGame;
@@ -22,7 +25,12 @@ public final class GameView {
     private int startX;
     private int startY;
 
-    public GameView(GameConfig gameConfig) {
+    public GameView(Context context, GameSurfaceView gameSurfaceV) {
+        this(ApplicationPreferenceService.getConfig(context), gameSurfaceV);
+    }
+
+    public GameView(GameConfig gameConfig, GameSurfaceView gameSurfaceV) {
+        this.gameSurfaceView = gameSurfaceV;
         this.gameConfig = gameConfig;
         bmpGame = Bitmap.createBitmap(
                 Resources.getSystem().getDisplayMetrics().widthPixels,
@@ -45,24 +53,33 @@ public final class GameView {
             canvas.drawBitmap(bmpGame, 0, 0, null);
     }
 
+    public void DrawNewSteps() {
+        Sprite sprite = gameConfig.getSprite();
+        if(sprite.newPosXList.size() == 0)
+            return;
+        for(int idx = 0; idx < sprite.newPosXList.size(); idx++)
+            DrawStep(sprite.newPosXList.get(idx), sprite.newPosYList.get(idx), sprite.getColor());
+        sprite.ClearPosXYLists();
+    }
+
     public void DrawStep(int x, int y, int color){
         Paint myPaint = new Paint();
         myPaint.setColor(color);
-        //if(gameConfig.getLinesSize() > 3) {
+        if(gameConfig.getLinesAsSquares()) {
             canvasGame.drawRect(startX + x * lineSize + 1,
                     startY + y * lineSize + 1,
                     startX + ++x * lineSize - 1,
                     startY + ++y * lineSize - 1,
                     myPaint);
-        //}
-//        else
-//        {
-//            canvasGame.drawRect(startX + x * lineSize,
-//                    startY + y * lineSize,
-//                    startX + ++x * lineSize,
-//                    startY + ++y * lineSize,
-//                    myPaint);
-//        }
+        }
+        else
+        {
+            canvasGame.drawRect(startX + x * lineSize,
+                    startY + y * lineSize,
+                    startX + ++x * lineSize,
+                    startY + ++y * lineSize,
+                    myPaint);
+        }
     }
 
     public void DrawBackground(){

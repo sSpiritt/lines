@@ -6,6 +6,9 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Created by Gabrys on 09.12.2017.
  */
@@ -13,20 +16,22 @@ public class GameSurfaceView extends SurfaceView {
     private GameSurfaceView gameSurfaceView;
     private SurfaceHolder surfaceHolder;
     public GameThread gameThread;
+    public GameViewThread gameViewThread;
+    public GameView gameView;
 
     public GameSurfaceView(Context context) {
         super(context);
-        init();
+        init(context);
     }
 
     public GameSurfaceView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        init();
+        init(context);
     }
 
     public GameSurfaceView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
-        init();
+        init(context);
     }
 
     private final class GestureListener extends GestureDetector.SimpleOnGestureListener {
@@ -36,14 +41,19 @@ public class GameSurfaceView extends SurfaceView {
         }
     }
 
-    private void init() {
+    private void init(Context context) {
+        gameView = new GameView(context, gameSurfaceView);
         gameSurfaceView = (GameSurfaceView) findViewById(R.id.gameSurfaceView);
         surfaceHolder = getHolder();
         surfaceHolder.addCallback(new SurfaceHolder.Callback() {
 
             @Override
             public void surfaceCreated(SurfaceHolder holder) {
-                gameThread = new GameThread(gameSurfaceView);
+
+                gameViewThread = new GameViewThread(gameSurfaceView, gameView);
+                gameViewThread.start();
+
+                gameThread = new GameThread(gameSurfaceView, gameView.getWidth(), gameView.getHeight());
                 gameThread.start();
             }
 
@@ -59,6 +69,17 @@ public class GameSurfaceView extends SurfaceView {
                 while (retry) {
                     try {
                         gameThread.join();
+                        retry = false;
+                    } catch (InterruptedException e) {
+                    }
+                }
+
+                retry = true;
+
+                gameViewThread.setRunning(false);
+                while (retry) {
+                    try {
+                        gameViewThread.join();
                         retry = false;
                     } catch (InterruptedException e) {
                     }

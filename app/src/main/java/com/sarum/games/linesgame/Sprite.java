@@ -2,6 +2,9 @@ package com.sarum.games.linesgame;
 
 import android.graphics.Color;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Created by Gabrys on 11.12.2017.
  */
@@ -13,6 +16,8 @@ public class Sprite {
     private int posY;
     private int color;
     private boolean alive = true;
+    public List<Integer> newPosXList;
+    public List<Integer> newPosYList;
 
     public Sprite(byte id, int x, int y, int lineColor, Direction dir){
         this.id = id;
@@ -20,6 +25,21 @@ public class Sprite {
         this.posY = y;
         this.color = lineColor;
         this.direction = dir;
+        this.newPosXList = new ArrayList<>();
+        this.newPosYList = new ArrayList<>();
+        this.ClearPosXYLists();
+    }
+
+    public void ClearPosXYLists () {
+        this.newPosXList.clear();
+        this.newPosYList.clear();
+    }
+
+    public void AddNewPosXYToLists (int posX, int posY) {
+        this.posX = posX;
+        this.posY = posY;
+        this.newPosXList.add(posX);
+        this.newPosYList.add(posY);
     }
 
     public byte getId() {

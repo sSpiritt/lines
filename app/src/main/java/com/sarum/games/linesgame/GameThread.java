@@ -4,9 +4,12 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.util.Log;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Lock;
 
 /**
  * Created by Gabrys on 09.12.2017.
@@ -16,17 +19,15 @@ public class GameThread extends Thread {
     public GameSurfaceView gameSurfaceView;
     private boolean running = false;
     private GameConfig gameConfig;
-    private GameView gameView;
     private byte[][] board;
 
-    public GameThread(GameSurfaceView view)
+    public GameThread(GameSurfaceView view, int boardWidth, int boardHeight)
     {
         super();
         gameSurfaceView = view;
         gameConfig = com.sarum.games.linesgame.ApplicationPreferenceService.getConfig(view.getContext());
-        gameView = new GameView(this.gameConfig);
 
-        board = new byte[gameView.getWidth()][gameView.getHeight()];
+        board = new byte[boardWidth][boardHeight];
         for (byte[] row : board)
             Arrays.fill(row, (byte) 0);
 
@@ -41,32 +42,17 @@ public class GameThread extends Thread {
     public void run() {
         running  =  true;
         long startContextTimeInMs = ((Calendar.getInstance().getTimeInMillis() / 1000) + 1) * 1000;
-        int gameSpeedStepInMs = 1000 / gameConfig.getGameSpeed();
+        int gameSpeedStepInMs = 1000 / (gameConfig.getGameSpeed() * (11 - gameConfig.getLinesSize()));
         long gameNextStepTime = startContextTimeInMs;
-
-//        int bmpRefreshTime = 40;
-//        long bmpNextRefreshTime = startContextTimeInMs;
 
         while(running){
             UpdateSprites();
 
-//            if(Calendar.getInstance().getTimeInMillis() >= bmpNextRefreshTime) {
-//                bmpNextRefreshTime = bmpNextRefreshTime + bmpRefreshTime;
-                Canvas canvas = gameSurfaceView.getHolder().lockCanvas();
-
-                if (canvas != null) {
-                    synchronized (gameSurfaceView.getHolder()) {
-                        gameView.DrawStep(gameConfig.getSprite().getPosX(), gameConfig.getSprite().getPosY(), gameConfig.getSprite().getColor());
-                        gameView.Draw(canvas);
-                    }
-                    gameSurfaceView.getHolder().unlockCanvasAndPost(canvas);
-                }
-            //}
-
             try {
                 gameNextStepTime = gameNextStepTime + gameSpeedStepInMs;
-
-                sleep(gameNextStepTime - Calendar.getInstance().getTimeInMillis());
+                long sleepTime = gameNextStepTime - Calendar.getInstance().getTimeInMillis();
+                if (sleepTime > 0)
+                    sleep(sleepTime);
 
             } catch (InterruptedException e) {
                 // TODO Auto-generated catch block
@@ -76,17 +62,20 @@ public class GameThread extends Thread {
     }
 
     private void init() {
-        gameConfig.getSprite().setPosXY(gameView.getWidth() / 3, gameView.getHeight() / 2);
-        gameConfig.getSprite().setAlive(true);
+        Sprite sprite = gameConfig.getSprite();
+        sprite.setPosXY(board.length / 3, board[0].length / 2);
+        sprite.setDirection(Sprite.Direction.RIGHT);
+        sprite.setAlive(true);
     }
 
-    private void UpdateSprites() {
-        if(!gameConfig.getSprite().isAlive())
+    private synchronized void UpdateSprites() {
+        Sprite sprite = gameConfig.getSprite();
+        if(!sprite.isAlive())
         return;
 
-            int newX = gameConfig.getSprite().getPosX();
-            int newY = gameConfig.getSprite().getPosY();
-            switch (gameConfig.getSprite().getDirection()) {
+            int newX = sprite.getPosX();
+            int newY = sprite.getPosY();
+            switch (sprite.getDirection()) {
                 case LEFT:
                     newX--;
                     break;
@@ -101,12 +90,17 @@ public class GameThread extends Thread {
                     break;
             }
 
+//        Lock lock =;
+//
+//            lock.tryLock();
             if ((newX < 0) || (newY < 0) || (newX == board.length) || (newY == board[0].length) || (board[newX][newY] > 0)) {
-                gameConfig.getSprite().setAlive(false);
+                sprite.setAlive(false);
             } else {
-                board[newX][newY] = gameConfig.getSprite().getId();
-                gameConfig.getSprite().setPosXY(newX, newY);
+                board[newX][newY] = sprite.getId();
+                sprite.AddNewPosXYToLists(newX, newY);
             }
+
+           // lock.unlock();
     }
 
 }
